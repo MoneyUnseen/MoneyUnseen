@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { Subscription, Currency } from '../types'
 import { getMonthlyEquivalent, getCurrencySymbol, isFixedCostCategory } from '../types'
-import ExportButton from './ExportButton'
 import EditSubscriptionForm from './EditSubscriptionForm'
 
 interface SubscriptionListProps {
@@ -299,9 +298,7 @@ export default function SubscriptionList({
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.25rem' }}>
-          <ExportButton subscriptions={subscriptions} currency={currency} />
-        </div>
+
       </div>
     </>
   )
@@ -328,15 +325,17 @@ function SubscriptionCard({
 
   // No cancel deadline for government levies / fixed obligations
   const NO_CANCEL_NOTICE_CATS = new Set(['road_tax', 'municipal_tax', 'mortgage', 'rent', 'pension', 'utilities', 'childcare'])
+  const noticePeriod = subscription.noticePeriod ?? 0
   const deadlineDays = !isPaused && !isStopped && !subscription.isTrial && subscription.renewalDate
+    && noticePeriod > 0
     && !NO_CANCEL_NOTICE_CATS.has(subscription.category)
     ? daysUntilCancelDeadline(subscription) : null
-  const cancelDeadline = subscription.renewalDate && !isPaused && !isStopped
+  const cancelDeadline = subscription.renewalDate && !isPaused && !isStopped && noticePeriod > 0
     ? (() => {
         const renewal = nextRenewalDate(subscription)
         if (!renewal) return null
         const d = new Date(renewal)
-        d.setDate(d.getDate() - (subscription.noticePeriod ?? 30))
+        d.setDate(d.getDate() - noticePeriod)
         return d
       })()
     : null
@@ -379,8 +378,8 @@ function SubscriptionCard({
       }}
       id={noDateHighlight ? `card-no-date-${subscription.id}` : undefined}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex items-center gap-3 flex-1 min-w-0" style={{ minWidth: 0, flexBasis: '60%' }}>
           <div className="text-3xl flex-shrink-0" style={{ display: 'none' }}>
             {CATEGORY_EMOJI[subscription.category] || '📦'}
           </div>
@@ -413,7 +412,7 @@ function SubscriptionCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+        <div className="flex items-center gap-2 flex-shrink-0" style={{ flexWrap: 'nowrap' }}>
           {!isStopped && (
             <button onClick={onEdit} style={{
               padding: '0.4rem 0.6rem', borderRadius: 8, border: '1.5px solid #e5e7eb',
