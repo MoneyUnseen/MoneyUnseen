@@ -7,21 +7,24 @@ interface GoalSelectorProps {
 
 const GOALS: UserGoal[] = [
   {
-    type: 'vacation',
+    id: 'g-vacation',
+    type: 'medium',
     title: 'Extra Vacations',
     targetAmount: 1200,
     description: 'Weekend in Barcelona',
     emoji: '✈️',
   },
   {
-    type: 'investment',
+    id: 'g-investment',
+    type: 'longterm',
     title: 'Build Wealth',
     targetAmount: 15000,
     description: '€50/month = €15k in 10 years',
     emoji: '📈',
   },
   {
-    type: 'family',
+    id: 'g-family',
+    type: 'quick_win',
     title: 'Family Experiences',
     targetAmount: 600,
     description: 'Theme park trip every year',
@@ -38,7 +41,7 @@ export default function GoalSelector({ currentGoal, onSelectGoal }: GoalSelector
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {GOALS.map((goal) => (
           <button
-            key={goal.type}
+            key={goal.id}
             onClick={() => onSelectGoal(goal)}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               currentGoal.type === goal.type

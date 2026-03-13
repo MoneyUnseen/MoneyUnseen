@@ -1,4 +1,4 @@
-import { calculateLevel, getXPForNextLevel, getLevelTitle } from '../types'
+import { calculateLevel } from '../types'
 
 interface XPTrackerProps {
   totalXP: number
@@ -7,26 +7,22 @@ interface XPTrackerProps {
 
 export default function XPTracker({ totalXP, streakDays }: XPTrackerProps) {
   const level = calculateLevel(totalXP)
-  const nextLevelXP = getXPForNextLevel(totalXP)
   const currentLevelXP = (level - 1) * 100
+  const nextLevelXP = level * 100
   const progressXP = totalXP - currentLevelXP
   const progressPercent = (progressXP / (nextLevelXP - currentLevelXP)) * 100
-  const title = getLevelTitle(level)
 
   return (
     <div className="glass rounded-2xl p-6 shadow-lg">
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="text-sm text-gray-600 font-medium">Level {level}</div>
-          <div className="text-2xl font-bold text-gray-900">{title}</div>
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold text-primary-600">{totalXP}</div>
           <div className="text-sm text-gray-600">XP</div>
         </div>
       </div>
-
-      {/* Progress bar */}
       <div className="mb-4">
         <div className="flex justify-between text-xs text-gray-600 mb-1">
           <span>{currentLevelXP} XP</span>
@@ -39,8 +35,6 @@ export default function XPTracker({ totalXP, streakDays }: XPTrackerProps) {
           />
         </div>
       </div>
-
-      {/* Streak */}
       <div className="flex items-center justify-center gap-2 p-3 bg-primary-50 rounded-lg">
         <span className="text-2xl">🔥</span>
         <div>

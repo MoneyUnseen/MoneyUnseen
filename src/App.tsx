@@ -1,8 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSubscriptions, useProfile } from './hooks/useData'
-import TwoWorldsView from './components/TwoWorldsView'
 import SmartGoals from './components/SmartGoals'
-import CurrencyToggle from './components/CurrencyToggle'
 import SubscriptionList from './components/SubscriptionList'
 import AddSubscriptionForm from './components/AddSubscriptionForm'
 import Confetti from './components/Confetti'
@@ -10,14 +8,13 @@ import OnboardingWizard from './components/OnboardingWizard'
 import { getMonthlyEquivalent, generateSmartGoals, isFixedCostCategory } from './types'
 import SaveMoreModal from './components/SaveMoreModal'
 import FixedCostNudge from './components/FixedCostNudge'
-import VariableSpendCard from './components/VariableSpendCard'
 import ReturnVisitCard from './components/ReturnVisitCard'
 import ExportButton from './components/ExportButton'
 import YearlyCheckTip from './components/YearlyCheckTip'
 
 function App() {
   const { subscriptions, addSubscription, updateSubscription, deleteSubscription, cancelSubscription, reactivateSubscription, stopSubscription, loading: subsLoading } = useSubscriptions()
-  const { profile, toggleGoal, setEmail, setCurrency, loading: profileLoading } = useProfile()
+  const { profile, toggleGoal, setEmail, loading: profileLoading } = useProfile()
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
@@ -76,13 +73,10 @@ function App() {
 
   const subCount = subscriptions.filter(s => !s.isFixedCost && !isFixedCostCategory(s.category)).length
   const fixedCount = subscriptions.filter(s => s.isFixedCost || isFixedCostCategory(s.category)).length
-  const totalItemCount = subscriptions.length
 
   // Show fixed cost nudge: 3+ subs, no fixed costs yet, not dismissed
   const showFixedNudge = subCount >= 3 && fixedCount === 0 && !fixedNudgeDismissed
 
-  // Show variable spend card: 7+ items total with at least 2 fixed costs
-  const showVariableSpend = totalItemCount >= 7 && fixedCount >= 2
 
   const savingsBasis = totalSavings > 0 ? totalSavings : (suggestedPauseSub ? getMonthlyEquivalent(suggestedPauseSub.cost, suggestedPauseSub.frequency) : totalMonthlySpend)
 
@@ -217,8 +211,8 @@ function App() {
       {saveMoreModal && (
         <SaveMoreModal
           savedAmount={saveMoreModal.amount}
-          currency={currency}
           remainingCount={subscriptions.filter(s => s.isActive && !s.isStopped).length - 1}
+          currency={currency}
           onClose={() => setSaveMoreModal(null)}
         />
       )}
@@ -227,11 +221,9 @@ function App() {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <img src="/logo.png" alt="MoneyUnseen" className="h-8 md:h-12" />
           <div className="flex items-center gap-3">
-            <CurrencyToggle currency={currency} onChange={setCurrency} />
             {/* Import button in header */}
             <ExportButton
               subscriptions={subscriptions}
-              currency={currency}
               headerMode
               onImport={async (imported) => {
                 const existing = new Set(subscriptions.map(s => `${s.name}|${s.cost}|${s.frequency}`))
@@ -265,10 +257,8 @@ function App() {
           potentialMore={subscriptions
             .filter(s => s.isActive && !s.isStopped && !s.isFixedCost && !isFixedCostCategory(s.category) && ['streaming','music','gaming','news','software','food','sports_club','hobby_club','lottery'].includes(s.category))
             .reduce((sum, s) => sum + getMonthlyEquivalent(s.cost, s.frequency), 0)}
-          currency={currency}
         />
 
-        <TwoWorldsView subscriptions={subscriptions} currency={currency} />
 
         {!showAddForm && (
           <button
@@ -290,7 +280,6 @@ function App() {
           <YearlyCheckTip
             subName={yearlyTip.name}
             monthlyCost={yearlyTip.cost}
-            currency={currency}
             onDismiss={() => setYearlyTip(null)}
           />
         )}
@@ -302,7 +291,6 @@ function App() {
           onReactivate={reactivateSubscription}
           onStop={handleStopClick}
           onUpdate={updateSubscription}
-          currency={currency}
           highlightNoDates={highlightNoDates}
         />
 
@@ -332,8 +320,6 @@ function App() {
         {/* Download + Backup buttons — below the list */}
         {subscriptions.length > 0 && !showAddForm && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
-            <ExportButton subscriptions={subscriptions} currency={currency} mode="download" />
-            <ExportButton subscriptions={subscriptions} currency={currency} mode="backup" />
           </div>
         )}
 
@@ -436,7 +422,6 @@ function App() {
         {showFixedNudge && !showAddForm && (
           <FixedCostNudge
             subCount={subCount}
-            currency={currency}
             onAddFixedCost={handleAddFixedCostFromNudge}
             onDismiss={handleFixedNudgeDismiss}
           />
@@ -465,10 +450,6 @@ function App() {
           </div>
         )}
 
-        {showVariableSpend && (
-          <VariableSpendCard subscriptions={subscriptions} currency={currency} />
-        )}
-
         {(subscriptions.length >= 2 || totalSavings > 0) && suggestedGoals.length > 0 && (
           <SmartGoals
             suggestedGoals={suggestedGoals}
@@ -477,12 +458,12 @@ function App() {
             monthlySavings={savingsBasis}
             totalSavings={totalSavings}
             suggestedPauseSubName={suggestedPauseSub?.name}
-            currency={currency}
             email={profile.email}
             onEmailSubmit={setEmail}
             fixedMonthly={fixedMonthlyForRecap}
             subsMonthly={subsMonthlyForRecap}
             variableMonthly={variableMonthlyForRecap}
+            currency={currency}
           />
         )}
 

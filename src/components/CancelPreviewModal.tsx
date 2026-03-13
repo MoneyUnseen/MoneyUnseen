@@ -1,5 +1,5 @@
 import type { Subscription } from '../types'
-import { getMonthlyEquivalent, calculateCancelXP } from '../types'
+import { getMonthlyEquivalent } from '../types'
 
 interface CancelPreviewModalProps {
   subscription: Subscription
@@ -19,7 +19,6 @@ export default function CancelPreviewModal({
   const monthlyEquivalent = getMonthlyEquivalent(subscription.cost, subscription.frequency)
   const yearlySavings = monthlyEquivalent * 12
   const monthsToGoal = currentGoalAmount / monthlyEquivalent
-  const xpEarned = calculateCancelXP(subscription.cost)
   const progressIncrease = (monthlyEquivalent / totalMonthlySpend) * 100
 
   return (

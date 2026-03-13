@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import type { Subscription, UserProfile, UserGoal, Currency } from '../types'
-import { calculateCancelXP } from '../types'
 import * as db from '../lib/db'
 
 export function useSubscriptions() {
