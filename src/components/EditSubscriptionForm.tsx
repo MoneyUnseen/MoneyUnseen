@@ -12,6 +12,11 @@ export default function EditSubscriptionForm({ subscription, onSave, onClose }: 
   const [cost, setCost] = useState(String(subscription.cost))
   const [frequency, setFrequency] = useState<BillingFrequency>(subscription.frequency)
   const [category, setCategory] = useState<SubscriptionCategory_All>(subscription.category)
+
+  const NO_TRIAL_NOTICE_CATS = new Set(['mortgage', 'rent', 'energy', 'health_insurance', 'disability_insurance',
+    'home_insurance', 'car_insurance', 'road_tax', 'municipal_tax', 'pension',
+    'mobile_phone', 'internet', 'childcare', 'car_fuel', 'maintenance', 'other_fixed'])
+  const isFixedCostCat = NO_TRIAL_NOTICE_CATS.has(category)
   const [renewalDate, setRenewalDate] = useState(
     subscription.renewalDate
       ? new Date(subscription.renewalDate).toISOString().split('T')[0]
@@ -141,6 +146,7 @@ export default function EditSubscriptionForm({ subscription, onSave, onClose }: 
             )}
           </div>
 
+          {!isFixedCostCat && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cancellation notice period</label>
             <select value={noticePeriod} onChange={e => setNoticePeriod(Number(e.target.value))}
@@ -153,8 +159,10 @@ export default function EditSubscriptionForm({ subscription, onSave, onClose }: 
               <option value={90}>90 days</option>
             </select>
           </div>
+          )}
 
-          {/* Trial toggle */}
+          {/* Trial toggle — alleen tonen als relevant (niet voor vaste lasten, en alleen als al een trial was) */}
+          {!isFixedCostCat && subscription.isTrial && (
           <div onClick={() => setIsTrial(!isTrial)} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '0.75rem 1rem', borderRadius: 10, cursor: 'pointer',
@@ -170,7 +178,8 @@ export default function EditSubscriptionForm({ subscription, onSave, onClose }: 
             </div>
           </div>
 
-          {isTrial && (
+          )}
+          {!isFixedCostCat && subscription.isTrial && isTrial && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Trial ends on</label>
               <input type="date" value={trialEndsDate}
