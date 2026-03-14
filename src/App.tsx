@@ -401,33 +401,36 @@ export default function App() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
                 <div style={{ background: s.grey50, padding: '1.5rem', borderRight: `1px solid ${s.grey100}` }}>
                   <p style={{ fontFamily: s.fontSans, fontSize: '0.65rem', fontWeight: 700, color: s.grey400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Still paying</p>
-                  <p style={{ fontFamily: s.fontSerif, fontSize: '2rem', fontWeight: 700, color: s.grey700, margin: 0 }}>€174</p>
-                  <p style={{ fontFamily: s.fontSans, fontSize: '0.7rem', color: s.grey400, marginTop: 4 }}>per month · 5 active</p>
+                  <p style={{ fontFamily: s.fontSerif, fontSize: '2rem', fontWeight: 700, color: s.grey700, margin: 0 }}>€1,404</p>
+                  <p style={{ fontFamily: s.fontSans, fontSize: '0.7rem', color: s.grey400, marginTop: 4 }}>per month · 7 active</p>
                 </div>
                 <div style={{ background: s.green, padding: '1.5rem' }}>
                   <p style={{ fontFamily: s.fontSans, fontSize: '0.65rem', fontWeight: 700, color: '#bbf7d0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Reclaimed</p>
-                  <p style={{ fontFamily: s.fontSerif, fontSize: '2rem', fontWeight: 700, color: s.white, margin: 0 }}>€63</p>
-                  <p style={{ fontFamily: s.fontSans, fontSize: '0.7rem', color: '#bbf7d0', marginTop: 4 }}>= €756/year</p>
+                  <p style={{ fontFamily: s.fontSerif, fontSize: '2rem', fontWeight: 700, color: s.white, margin: 0 }}>€68</p>
+                  <p style={{ fontFamily: s.fontSans, fontSize: '0.7rem', color: '#bbf7d0', marginTop: 4 }}>= €816/year</p>
                 </div>
               </div>
               <div style={{ background: s.white, padding: '0.75rem 1.25rem' }}>
                 {[
-                  { n: 'Health insurance', c: '€149.00', active: true },
-                  { n: 'Netflix', c: '€13.99', active: true },
-                  { n: 'Gym membership', c: '€29.00', active: false },
-                  { n: 'Spotify', c: '€9.99', active: true },
-                  { n: 'Road tax', c: '€8.00', active: true },
-                  { n: 'Trial: Adobe CC', c: '€25.99', active: false },
-                  { n: 'Magazine', c: '€12.00', active: false },
-                  { n: 'LinkedIn Premium', c: '€25.99', active: true },
+                  { n: 'Rent', c: '€950.00', state: 'active' },
+                  { n: 'Health insurance', c: '€149.00', state: 'active' },
+                  { n: 'Energy', c: '€189.00', state: 'active' },
+                  { n: 'Netflix', c: '€15.99', state: 'active' },
+                  { n: 'Gym membership', c: '€29.00', state: 'active' },
+                  { n: 'Spotify', c: '€12.99', state: 'active' },
+                  { n: 'Road tax', c: '€58.00', state: 'active' },
+                  { n: 'LinkedIn Premium', c: '€29.98', state: 'paused' },
+                  { n: 'Trial: Adobe CC', c: '€25.99', state: 'paused' },
+                  { n: 'Magazine', c: '€12.00', state: 'stopped' },
                 ].map(sub => (
-                  <div key={sub.n} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: `1px solid ${s.grey50}` }}>
+                  <div key={sub.n} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: `1px solid ${s.grey50}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: sub.active ? s.purple : '#d1fae5', flexShrink: 0 }} />
-                      <span style={{ fontFamily: s.fontSans, fontSize: '0.82rem', color: sub.active ? s.grey700 : s.grey400 }}>{sub.n}</span>
-                      {!sub.active && <span style={{ fontFamily: s.fontSans, fontSize: '0.62rem', background: s.greenLight, color: s.green, padding: '1px 5px', borderRadius: s.r99, fontWeight: 600 }}>paused</span>}
+                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: sub.state === 'active' ? s.purple : sub.state === 'stopped' ? '#fca5a5' : '#d1fae5', flexShrink: 0 }} />
+                      <span style={{ fontFamily: s.fontSans, fontSize: '0.82rem', color: sub.state === 'active' ? s.grey700 : s.grey400 }}>{sub.n}</span>
+                      {sub.state === 'paused' && <span style={{ fontFamily: s.fontSans, fontSize: '0.62rem', background: s.greenLight, color: s.green, padding: '1px 5px', borderRadius: s.r99, fontWeight: 600 }}>paused</span>}
+                      {sub.state === 'stopped' && <span style={{ fontFamily: s.fontSans, fontSize: '0.62rem', background: '#fef2f2', color: '#ef4444', padding: '1px 5px', borderRadius: s.r99, fontWeight: 600 }}>stopped</span>}
                     </div>
-                    <span style={{ fontFamily: s.fontSans, fontSize: '0.82rem', fontWeight: 600, color: sub.active ? s.grey700 : s.grey400 }}>{sub.c}/mo</span>
+                    <span style={{ fontFamily: s.fontSans, fontSize: '0.82rem', fontWeight: 600, color: sub.state === 'active' ? s.grey700 : s.grey400 }}>{sub.c}/mo</span>
                   </div>
                 ))}
               </div>
