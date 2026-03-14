@@ -361,7 +361,7 @@ export default function App() {
             </h1>
 
             <p style={{ fontFamily: s.fontSans, fontSize: '1.1rem', color: s.grey500, maxWidth: 560, margin: '0 auto 2.5rem', lineHeight: 1.8 }}>
-              You know your rent and your phone bill. But add up insurance, road tax, that streaming service you forgot, the
+              You know your rent and your phone bill. But add up insurance, road tax, that trial subscription you meant to cancel, the streaming service you forgot, and the annual charge that hit last month — the real total surprises most people. MoneyUnseen makes it visible.
             </p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center', marginBottom: '1rem' }}>
@@ -814,11 +814,11 @@ export default function App() {
 const FAQ_ITEMS = [
   {
     q: "Is MoneyUnseen really free?",
-    a: "Yes — the app is completely free and unlimited right now. After the first 1,000 Founders claim their spots, the free tier moves to 10 items. We're being upfront about this because we think you deserve to know."
+    a: "Yes — the app is completely free and unlimited right now. After the first 1,000 Founders claim their spots, the free tier is restricted to 10 items. We're being upfront about this because we think you deserve to know."
   },
   {
     q: "I'm already using the app. Will my data and access change?",
-    a: "Your data is stored on your device and belongs to you — nothing changes there. The free tier limit (10 items) will apply to new users after the Founders milestone. We'll communicate any changes clearly before they happen."
+    a: "Your data is stored on your device and belongs to you — nothing changes there. After the Founders milestone, the free tier will be restricted to 10 items for all users. We'll communicate this clearly before it happens, with enough time for you to decide what's right for you."
   },
   {
     q: "What is the Founders Circle exactly?",
@@ -830,15 +830,19 @@ const FAQ_ITEMS = [
   },
   {
     q: "What's the difference between Free, Premium, and Founders Circle?",
-    a: "Free gives you the core app — track everything, see your two worlds, set goals. Premium (€3.99/month) adds smart tools like renewal reminders, a subscription detective, annual calendar, and more. Founders Circle (€59.99 once) is lifetime access to all Premium features, current and future — for the first 1,000 members only."
+    a: "Free gives you the core app — track everything, see your two worlds, set goals (up to 10 items after the Founders milestone). Premium (€3.99/month) adds smart tools like renewal reminders, a subscription detective, annual calendar, and more. Founders Circle (€59.99 once) is lifetime access to all Premium features, current and future — for the first 1,000 members only. After that, Premium is the only paid option."
   },
   {
     q: "Does MoneyUnseen connect to my bank?",
-    a: "Never. MoneyUnseen is entirely manual and intentionally so. You enter your costs yourself — that's the point. Your data lives on your device only. We have no access to it."
+    a: "MoneyUnseen is designed around manual entry — you stay in control of what you add and how. We do offer an optional import feature if you want to pull data from your bank, but this is never required and entirely your choice. Your data always stays on your device. We have no access to it."
   },
   {
     q: "What happens to my data if I stop using the app?",
-    a: "Your data stays on your device until you clear your browser storage. We hold no copy of it on our servers. Unsubscribing from the waitlist removes only your email from our list."
+    a: "Your data stays on your device until you clear your browser storage. We hold no copy of it on our servers. We recommend making a backup of your data or exporting it to PDF so you always have a clear overview — even if you stop using the app. Unsubscribing from the waitlist removes only your email from our list."
+  },
+  {
+    q: "What if I want to keep using the app but don't want the lifetime deal?",
+    a: "No problem at all. The Founders Circle lifetime deal is optional. When we launch, you can choose the regular Premium plan at €3.99/month — cancel anytime. The lifetime deal is simply a way to lock in a better price permanently, and it's only available to the first 1,000 members."
   },
   {
     q: "Will you ever add ads or sell my data?",
