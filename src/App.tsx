@@ -149,7 +149,7 @@ function calcFV(monthly: number, years: number, rate = 0.04) {
 }
 
 function SavingsExplainer() {
-  const [monthly, setMonthly] = useState(45)
+  const [monthly, setMonthly] = useState(68)
 
   const horizons = [
     { years: 10, label: '10 years' },
