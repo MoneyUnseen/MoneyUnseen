@@ -325,7 +325,14 @@ export default function App() {
       }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+<<<<<<< HEAD
             <img src="/logo.png" alt="MoneyUnseen" style={{ height: 32, width: 'auto' }} />
+=======
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: s.ink, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: s.white, fontSize: 14, fontWeight: 700 }}>M</span>
+            </div>
+            <span style={{ fontFamily: s.fontSerif, fontWeight: 700, fontSize: '1rem', color: s.ink }}>MoneyUnseen</span>
+>>>>>>> b14b5779c8dddd715ded22c894554eec7d063995
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span style={{ fontFamily: s.fontSans, fontSize: '0.75rem', fontWeight: 600, padding: '0.25rem 0.75rem', borderRadius: s.r99, background: s.greenLight, color: s.green, border: `1px solid ${s.greenBorder}` }}>
@@ -792,7 +799,14 @@ export default function App() {
       <footer style={{ borderTop: `1px solid ${s.grey200}`, padding: '2.5rem 1.5rem' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+<<<<<<< HEAD
             <img src="/logo.png" alt="MoneyUnseen" style={{ height: 28, width: 'auto', filter: 'brightness(0.4)' }} />
+=======
+            <div style={{ width: 26, height: 26, borderRadius: 7, background: s.ink, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: s.white, fontSize: 12, fontWeight: 700 }}>M</span>
+            </div>
+            <span style={{ fontFamily: s.fontSerif, fontWeight: 700, fontSize: '0.95rem', color: s.grey700 }}>MoneyUnseen</span>
+>>>>>>> b14b5779c8dddd715ded22c894554eec7d063995
           </div>
           <p style={{ fontFamily: s.fontSans, fontSize: '0.78rem', color: s.grey400, maxWidth: 380, lineHeight: 1.7, margin: 0 }}>
             We earn nothing from your choices. No affiliates. No sponsors. No ads — ever.

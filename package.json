@@ -1,7 +1,13 @@
 {
+<<<<<<< HEAD
   "name": "moneyunseen-landing",
   "private": true,
   "version": "0.0.1",
+=======
+  "name": "moneyunseen-app",
+  "private": true,
+  "version": "1.0.0",
+>>>>>>> b14b5779c8dddd715ded22c894554eec7d063995
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +16,12 @@
   },
   "dependencies": {
     "react": "^18.3.1",
+<<<<<<< HEAD
     "react-dom": "^18.3.1"
+=======
+    "react-dom": "^18.3.1",
+    "idb": "^8.0.0"
+>>>>>>> b14b5779c8dddd715ded22c894554eec7d063995
   },
   "devDependencies": {
     "@types/react": "^18.3.1",
