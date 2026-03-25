@@ -19,7 +19,7 @@ export type FixedCostCategory =
 
 export type SubscriptionCategory_All = SubscriptionCategory | FixedCostCategory
 
-export type GoalType = 'quick_win' | 'medium' | 'longterm' | 'custom'
+export type GoalType = 'quick_win' | 'medium' | 'longterm' | 'custom' | 'vacation' | 'investment' | 'family'
 
 export interface Subscription {
   id: string
@@ -158,4 +158,17 @@ export function generateSmartGoals(monthlySavings: number, currency: Currency = 
 
 export function calculateLevel(totalXP: number): number {
   return Math.floor(totalXP / 100) + 1
+}
+
+export function getXPForNextLevel(totalXP: number): number {
+  const currentLevel = calculateLevel(totalXP)
+  return currentLevel * 100
+}
+
+export function getLevelTitle(level: number): string {
+  if (level <= 1) return 'Beginner'
+  if (level <= 3) return 'Tracker'
+  if (level <= 5) return 'Saver'
+  if (level <= 10) return 'Pro'
+  return 'Master'
 }
