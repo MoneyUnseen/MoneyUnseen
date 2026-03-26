@@ -324,41 +324,22 @@ export default function SmartGoals({
 
       {/* EMAIL GATE */}
       {showGate && !isUnlocked && (
-        <div className="border-t border-gray-100 bg-gradient-to-br from-purple-50 to-white px-6 py-6">
-          <div className="text-center mb-4">
-            <div className="text-2xl mb-2">🎯</div>
-            <h4 className="font-bold text-gray-900 mb-1">Unlock your personal savings plan</h4>
-            <p className="text-sm text-gray-500">
-              We'll calculate exactly how fast you can reach your goals — and send you the results.
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowGate(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <div className="text-2xl mb-2">🎯</div>
+              <h4 className="font-bold text-gray-900 mb-1">Unlock your personal savings plan</h4>
+              <p className="text-sm text-gray-500">We'll calculate exactly how fast you can reach your goals — and send you the results.</p>
+            </div>
+            <form onSubmit={handleEmailSubmit} className="space-y-3">
+              <input type="email" value={emailInput} onChange={e => setEmailInput(e.target.value)} placeholder="your@email.com" required autoFocus className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-900 text-sm" />
+              <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl text-white font-semibold transition-all disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}>
+                {submitting ? 'Unlocking...' : 'Show me my plan →'}
+              </button>
+            </form>
+            <p className="text-xs text-gray-400 text-center mt-3">No spam. We hate it too. Unsubscribe anytime.</p>
+            <button onClick={() => setShowGate(false)} className="w-full text-xs text-gray-400 hover:text-gray-600 mt-2 transition-colors">Maybe later</button>
           </div>
-          <form onSubmit={handleEmailSubmit} className="space-y-3">
-            <input
-              type="email"
-              value={emailInput}
-              onChange={e => setEmailInput(e.target.value)}
-              placeholder="your@email.com"
-              required
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-900 text-sm"
-            />
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-3 rounded-xl text-white font-semibold transition-all disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}
-            >
-              {submitting ? 'Unlocking...' : 'Show me my plan →'}
-            </button>
-          </form>
-          <p className="text-xs text-gray-400 text-center mt-3">
-            No spam. We hate it too. Unsubscribe anytime.
-          </p>
-          <button
-            onClick={() => setShowGate(false)}
-            className="w-full text-xs text-gray-400 hover:text-gray-600 mt-2 transition-colors"
-          >
-            Maybe later
-          </button>
         </div>
       )}
 

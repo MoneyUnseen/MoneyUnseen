@@ -205,17 +205,6 @@ function App() {
           <img src="/logo.png" alt="MoneyUnseen" className="h-8 md:h-12" />
           <div className="flex items-center gap-3">
             <CurrencyToggle currency={currency} onChange={setCurrency} />
-            {/* Import button in header */}
-            <ExportButton
-              subscriptions={subscriptions}
-              currency={currency}
-              headerMode
-              onImport={async (imported) => {
-                for (const sub of imported) {
-                  try { await addSubscription(sub) } catch { /* skip duplicates */ }
-                }
-              }}
-            />
             <div className="bg-purple-100 text-purple-700 rounded-full px-3 py-1 text-xs font-semibold">
               Beta
             </div>
