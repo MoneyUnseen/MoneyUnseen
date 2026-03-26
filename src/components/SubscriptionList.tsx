@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { Subscription, Currency } from '../types'
-import { getMonthlyEquivalent, getCurrencySymbol } from '../types'
+import { getMonthlyEquivalent, getCurrencySymbol, isFixedCostCategory } from '../types'
 import ExportButton from './ExportButton'
 import EditSubscriptionForm from './EditSubscriptionForm'
 
@@ -12,21 +12,36 @@ interface SubscriptionListProps {
   onReactivate: (id: string) => void
   onUpdate: (sub: Subscription) => void
   currency?: Currency
+  highlightNoDates?: boolean
 }
 
 const CATEGORY_EMOJI: Record<string, string> = {
+  // Subscriptions
   streaming: '▶️', fitness: '💪', software: '💻', music: '🎵', gaming: '🎮',
-  food: '🍔', news: '📰', insurance: '🛡️', road_tax: '🚗', lottery: '🎰',
-  sports_club: '⚽', hobby_club: '🎨', mobile_phone: '📱', car_fuel: '⛽',
-  utilities: '💡', maintenance: '🔧', other: '📦',
+  food: '🍔', news: '📰', lottery: '🎰', sports_club: '⚽', hobby_club: '🎨',
+  other_sub: '📦',
+  // Fixed costs
+  mortgage: '🏠', rent: '🏢', energy: '⚡', health_insurance: '🏥',
+  disability_insurance: '🩺', home_insurance: '🏗️', car_insurance: '🚗',
+  road_tax: '🛣️', municipal_tax: '🏛️', pension: '👴', mobile_phone: '📱',
+  internet: '🌐', childcare: '🧒', car_fuel: '⛽', maintenance: '🔧',
+  other_fixed: '📋',
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
+  // Subscriptions
   streaming: 'Streaming', fitness: 'Fitness', software: 'Software', music: 'Music',
-  gaming: 'Gaming', food: 'Food', news: 'News', insurance: 'Insurance',
-  road_tax: 'Road Tax', lottery: 'Lottery', sports_club: 'Sports', hobby_club: 'Hobby',
-  mobile_phone: 'Mobile', car_fuel: 'Car', utilities: 'Utilities',
-  maintenance: 'Maintenance', other: 'Other',
+  gaming: 'Gaming', food: 'Food & Delivery', news: 'News', lottery: 'Lottery',
+  sports_club: 'Sports', hobby_club: 'Hobby', other_sub: 'Other',
+  // Fixed costs
+  mortgage: 'Mortgage', rent: 'Rent', energy: 'Energy', health_insurance: 'Health Insurance',
+  disability_insurance: 'Disability Insurance', home_insurance: 'Home Insurance',
+  car_insurance: 'Car Insurance', road_tax: 'Road Tax', municipal_tax: 'Municipal Tax',
+  pension: 'Pension', mobile_phone: 'Mobile Phone', internet: 'Internet',
+  childcare: 'Childcare', car_fuel: 'Car Fuel', maintenance: 'Maintenance',
+  other_fixed: 'Fixed Cost',
+  // Legacy (backwards compatibility)
+  insurance: '🛡️', utilities: '💡', other: '📦',
 }
 
 function nextRenewalDate(sub: Subscription): Date | null {
@@ -60,12 +75,29 @@ function formatDate(date: Date): string {
 }
 
 export default function SubscriptionList({
-  subscriptions, onDelete, onCancel, onStop, onReactivate, onUpdate, currency = 'EUR'
+  subscriptions, onDelete, onCancel, onStop, onReactivate, onUpdate, currency = 'EUR', highlightNoDates = false
 }: SubscriptionListProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [editingSub, setEditingSub] = useState<Subscription | null>(null)
   const [stoppedExpanded, setStoppedExpanded] = useState(false)
   const sym = getCurrencySymbol(currency)
+
+  // Preserve scroll position across async re-renders
+  // Double rAF ensures we restore after React finishes painting the updated DOM
+  const withScrollLock = useCallback((fn: (id: string) => Promise<void> | void) => async (id: string) => {
+    const y = window.scrollY
+    await fn(id)
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        window.scrollTo({ top: y, behavior: 'instant' })
+      )
+    )
+  }, [])
+
+  const handleCancel = withScrollLock(onCancel)
+  const handleStop = withScrollLock(onStop)
+  const handleReactivate = withScrollLock(onReactivate)
+  const handleDelete = withScrollLock(onDelete)
 
   if (subscriptions.length === 0) {
     return (
@@ -80,9 +112,12 @@ export default function SubscriptionList({
     )
   }
 
-  const activeSubscriptions = subscriptions.filter(s => s.isActive && !s.isStopped)
-  const pausedSubscriptions = subscriptions.filter(s => !s.isActive && !s.isStopped)
-  const stoppedSubscriptions = subscriptions.filter(s => s.isStopped)
+  const isFixed = (s: Subscription) => s.isFixedCost || isFixedCostCategory(s.category)
+
+  const activeSubscriptions = subscriptions.filter(s => !isFixed(s) && s.isActive && !s.isStopped)
+  const activeFixedCosts = subscriptions.filter(s => isFixed(s) && s.isActive && !s.isStopped)
+  const pausedSubscriptions = subscriptions.filter(s => !isFixed(s) && !s.isActive && !s.isStopped)
+  const stoppedSubscriptions = subscriptions.filter(s => !isFixed(s) && s.isStopped)
 
   const totalPausedMonthly = pausedSubscriptions.reduce(
     (sum, s) => sum + getMonthlyEquivalent(s.cost, s.frequency), 0
@@ -141,24 +176,45 @@ export default function SubscriptionList({
           </div>
         )}
 
-        {/* Active */}
+        {/* Fixed Costs */}
+        {activeFixedCosts.length > 0 && !activeCategory && (
+          <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+            <div className="bg-gray-100 px-5 py-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide">🏠 Fixed Costs</h3>
+              <span className="text-sm font-bold text-gray-600">
+                {sym}{activeFixedCosts.reduce((s, c) => s + getMonthlyEquivalent(c.cost, c.frequency), 0).toFixed(0)}/mo
+              </span>
+            </div>
+            <div className="bg-white divide-y divide-gray-100">
+              {activeFixedCosts.map(sub => (
+                <SubscriptionCard key={sub.id} subscription={sub}
+                  onDelete={handleDelete} onCancel={handleCancel} onStop={handleStop}
+                  onReactivate={handleReactivate} onEdit={() => setEditingSub(sub)}
+                  currency={currency} isFixedCost />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active subscriptions */}
         {activeSubscriptions.length === 0 && !activeCategory ? (
           <div className="glass rounded-2xl p-6 shadow-lg text-center">
             <div className="text-4xl mb-3">🎉</div>
             <p className="text-base font-bold text-green-600 mb-1">You're reviewing everything!</p>
-            <p className="text-sm text-gray-400">All your subscriptions are paused or stopped. Great work taking control.</p>
+            <p className="text-sm text-gray-400">All your subscriptions are paused or cancelled. Great work taking control.</p>
           </div>
         ) : filteredActive.length > 0 ? (
           <div className="glass rounded-2xl p-6 shadow-lg">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Active {activeCategory ? `· ${CATEGORY_EMOJI[activeCategory]} ${CATEGORY_LABEL[activeCategory]}` : ''}
+              Active subscriptions {activeCategory ? `· ${CATEGORY_EMOJI[activeCategory]} ${CATEGORY_LABEL[activeCategory]}` : ''}
             </h3>
             <div className="space-y-3">
               {filteredActive.map(sub => (
                 <SubscriptionCard key={sub.id} subscription={sub}
-                  onDelete={onDelete} onCancel={onCancel} onStop={onStop}
-                  onReactivate={onReactivate} onEdit={() => setEditingSub(sub)}
-                  currency={currency} />
+                  onDelete={handleDelete} onCancel={handleCancel} onStop={handleStop}
+                  onReactivate={handleReactivate} onEdit={() => setEditingSub(sub)}
+                  currency={currency}
+                  highlightNoDate={highlightNoDates && !sub.renewalDate} />
               ))}
             </div>
           </div>
@@ -169,16 +225,20 @@ export default function SubscriptionList({
           <div className="glass rounded-2xl p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-700">⏸ Paused</h3>
-              <div className="text-right">
-                <span className="text-sm font-bold text-green-600">{sym}{totalPausedMonthly.toFixed(0)}/mo</span>
-                <span className="text-xs text-green-500 ml-1">· {sym}{(totalPausedMonthly * 12).toFixed(0)}/yr saved</span>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontFamily: 'system-ui', fontSize: '0.85rem', fontWeight: 700, color: '#16a34a' }}>
+                  {sym}{totalPausedMonthly.toFixed(0)}/mo saved
+                </div>
+                <div style={{ fontFamily: 'system-ui', fontSize: '1rem', fontWeight: 800, color: '#16a34a' }}>
+                  = {sym}{(totalPausedMonthly * 12).toFixed(0)}/yr
+                </div>
               </div>
             </div>
             <div className="space-y-3">
               {pausedSubscriptions.map(sub => (
                 <SubscriptionCard key={sub.id} subscription={sub}
-                  onDelete={onDelete} onCancel={onCancel} onStop={onStop}
-                  onReactivate={onReactivate} onEdit={() => setEditingSub(sub)}
+                  onDelete={handleDelete} onCancel={handleCancel} onStop={handleStop}
+                  onReactivate={handleReactivate} onEdit={() => setEditingSub(sub)}
                   currency={currency} isPaused />
               ))}
             </div>
@@ -198,7 +258,7 @@ export default function SubscriptionList({
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <span style={{ fontFamily: 'system-ui', fontSize: '0.95rem', fontWeight: 700, color: '#6b7280' }}>
-                  🚫 Stopped
+                  🚫 Cancelled
                 </span>
                 <span style={{
                   fontFamily: 'system-ui', fontSize: '0.75rem', fontWeight: 600,
@@ -209,10 +269,10 @@ export default function SubscriptionList({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: 'system-ui', fontSize: '0.95rem', fontWeight: 800, color: '#16a34a' }}>
+                  <div style={{ fontFamily: 'system-ui', fontSize: '0.85rem', fontWeight: 700, color: '#16a34a' }}>
                     {sym}{totalStoppedMonthly.toFixed(0)}/mo saved
                   </div>
-                  <div style={{ fontFamily: 'system-ui', fontSize: '0.75rem', color: '#22c55e' }}>
+                  <div style={{ fontFamily: 'system-ui', fontSize: '1rem', fontWeight: 800, color: '#16a34a' }}>
                     = {sym}{(totalStoppedMonthly * 12).toFixed(0)}/yr
                   </div>
                 </div>
@@ -229,8 +289,8 @@ export default function SubscriptionList({
                 <div className="space-y-3">
                   {stoppedSubscriptions.map(sub => (
                     <SubscriptionCard key={sub.id} subscription={sub}
-                      onDelete={onDelete} onCancel={onCancel} onStop={onStop}
-                      onReactivate={onReactivate} onEdit={() => setEditingSub(sub)}
+                      onDelete={handleDelete} onCancel={handleCancel} onStop={handleStop}
+                      onReactivate={handleReactivate} onEdit={() => setEditingSub(sub)}
                       currency={currency} isStopped />
                   ))}
                 </div>
@@ -249,7 +309,7 @@ export default function SubscriptionList({
 
 function SubscriptionCard({
   subscription, onDelete, onCancel, onStop, onReactivate, onEdit,
-  isPaused = false, isStopped = false, currency = 'EUR',
+  isPaused = false, isStopped = false, currency = 'EUR', isFixedCost = false, highlightNoDate = false,
 }: {
   subscription: Subscription
   onDelete: (id: string) => void
@@ -259,12 +319,18 @@ function SubscriptionCard({
   onEdit: () => void
   isPaused?: boolean
   isStopped?: boolean
+  isFixedCost?: boolean
   currency?: Currency
+  highlightNoDate?: boolean
 }) {
   const monthly = getMonthlyEquivalent(subscription.cost, subscription.frequency)
   const sym = getCurrencySymbol(currency)
 
-  const deadlineDays = !isPaused && !isStopped && !subscription.isTrial && subscription.renewalDate ? daysUntilCancelDeadline(subscription) : null
+  // No cancel deadline for government levies / fixed obligations
+  const NO_CANCEL_NOTICE_CATS = new Set(['road_tax', 'municipal_tax', 'mortgage', 'rent', 'pension', 'utilities', 'childcare'])
+  const deadlineDays = !isPaused && !isStopped && !subscription.isTrial && subscription.renewalDate
+    && !NO_CANCEL_NOTICE_CATS.has(subscription.category)
+    ? daysUntilCancelDeadline(subscription) : null
   const cancelDeadline = subscription.renewalDate && !isPaused && !isStopped
     ? (() => {
         const renewal = nextRenewalDate(subscription)
@@ -298,8 +364,21 @@ function SubscriptionCard({
     ? 'bg-green-50 border border-green-100'
     : 'bg-white hover:shadow-md border border-gray-50'
 
+  const noDateHighlight = highlightNoDate && !subscription.renewalDate && !isPaused && !isStopped && !isFixedCost
+
   return (
-    <div className={`p-4 rounded-xl transition-all ${cardBg}`} style={{ opacity: isStopped ? 0.7 : 1 }}>
+    <div
+      className={`p-4 rounded-xl transition-all ${cardBg}`}
+      style={{
+        opacity: isStopped ? 0.7 : 1,
+        ...(noDateHighlight ? {
+          background: '#fffbeb',
+          border: '1.5px solid #fde68a',
+          boxShadow: '0 0 0 2px #fef3c7',
+        } : {}),
+      }}
+      id={noDateHighlight ? `card-no-date-${subscription.id}` : undefined}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="text-3xl flex-shrink-0" style={{ display: 'none' }}>
@@ -324,7 +403,7 @@ function SubscriptionCard({
             <div className="text-sm text-gray-400 flex items-center gap-2 flex-wrap">
               <span>{sym}{subscription.cost.toFixed(2)}/{subscription.frequency}</span>
               {subscription.frequency !== 'monthly' && (
-                <span className={isStopped ? 'text-gray-400' : 'text-primary-600'}>
+                <span className="text-gray-400">
                   ({sym}{monthly.toFixed(2)}/mo)
                 </span>
               )}
@@ -348,7 +427,17 @@ function SubscriptionCard({
             </button>
           )}
 
-          {isStopped ? (
+          {isFixedCost ? (
+            // Fixed cost: only edit + delete (no pause/cancel)
+            <>
+              <button onClick={() => onDelete(subscription.id)}
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-400 rounded-lg text-sm transition-colors flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+              </button>
+            </>
+          ) : isStopped ? (
             // Stopped: only reactivate + delete
             <>
               <button onClick={() => onReactivate(subscription.id)} style={{
@@ -377,7 +466,7 @@ function SubscriptionCard({
               }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#1e1748')}
                 onMouseLeave={e => (e.currentTarget.style.background = '#2C2269')}>
-                Stop
+                Cancel
               </button>
               <button onClick={() => onDelete(subscription.id)}
                 className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-lg text-sm transition-colors flex items-center justify-center">
@@ -400,7 +489,7 @@ function SubscriptionCard({
               }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#1e1748')}
                 onMouseLeave={e => (e.currentTarget.style.background = '#2C2269')}>
-                Stop
+                Cancel
               </button>
               <button onClick={() => onDelete(subscription.id)}
                 className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-lg text-sm transition-colors flex items-center justify-center">
@@ -425,7 +514,16 @@ function SubscriptionCard({
           <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: colors[indicatorLevel].dot }} />
           <span style={{ fontFamily: 'system-ui', fontSize: '0.72rem', fontWeight: 600, color: colors[indicatorLevel].text }}>
             {deadlineDays! <= 0
-              ? `Cancel deadline passed — renews ${formatDate(subscription.renewalDate!)}`
+              ? subscription.frequency === 'yearly'
+                ? `Cancel deadline passed — renews ${formatDate(nextRenewalDate(subscription)!)}`
+                : (() => {
+                    // For recurring short-term subs, compute NEXT cancel deadline
+                    const nextRenewal = nextRenewalDate(subscription)
+                    if (!nextRenewal) return `Cancel deadline passed — renews ${formatDate(subscription.renewalDate!)}`
+                    const nextDeadline = new Date(nextRenewal)
+                    nextDeadline.setDate(nextDeadline.getDate() - (subscription.noticePeriod ?? 30))
+                    return `Deadline passed — next cancel by ${formatDate(nextDeadline)}`
+                  })()
               : `Cancel by ${formatDate(cancelDeadline)} to avoid renewal`}
           </span>
         </div>

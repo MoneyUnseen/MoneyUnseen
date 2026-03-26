@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { UserGoal, Currency } from '../types'
 import { getCurrencySymbol } from '../types'
+import OpportunityCostCard from './OpportunityCostCard'
 
 interface SmartGoalsProps {
   suggestedGoals: UserGoal[]
@@ -12,6 +13,9 @@ interface SmartGoalsProps {
   currency: Currency
   email: string | undefined
   onEmailSubmit: (email: string) => void
+  fixedMonthly: number
+  subsMonthly: number
+  variableMonthly: number
 }
 
 export default function SmartGoals({
@@ -24,20 +28,22 @@ export default function SmartGoals({
   currency,
   email,
   onEmailSubmit,
+  fixedMonthly,
+  subsMonthly,
+  variableMonthly,
 }: SmartGoalsProps) {
   const sym = getCurrencySymbol(currency)
+  const totalTracked = fixedMonthly + subsMonthly + variableMonthly
   const [showGate, setShowGate] = useState(false)
   const [emailInput, setEmailInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const isUnlocked = !!email
+  const [goalChoice, setGoalChoice] = useState<null | 'goals' | 'more'>(null)
 
   if (suggestedGoals.length === 0) return null
 
   const handleGoalClick = (goal: UserGoal) => {
-    if (!isUnlocked) {
-      setShowGate(true)
-      return
-    }
+    if (!isUnlocked) { setShowGate(true); return }
     onToggleGoal(goal)
   }
 
@@ -49,16 +55,11 @@ export default function SmartGoals({
       await fetch('https://formspree.io/f/xjkvolod', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: emailInput,
-          _subject: 'MoneyUnseen — Goal unlock',
-          monthlySavings,
-        }),
+        body: JSON.stringify({ email: emailInput, _subject: 'MoneyUnseen — Goal unlock', monthlySavings }),
       })
       onEmailSubmit(emailInput)
       setShowGate(false)
     } catch {
-      // still unlock locally even if formspree fails
       onEmailSubmit(emailInput)
       setShowGate(false)
     } finally {
@@ -66,107 +67,262 @@ export default function SmartGoals({
     }
   }
 
+  const showGoals = goalChoice === 'goals' || totalSavings === 0
+
   return (
-    <div className="rounded-2xl shadow-lg overflow-hidden" style={{ border: '1.5px solid #bbf7d0' }}>
-      {/* Header — prominent green */}
-      <div style={{ background: 'linear-gradient(135deg, #16a34a, #22c55e)', padding: '1.25rem 1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.3rem' }}>
-          <span style={{ fontSize: '1.4rem' }}>💡</span>
-          <h3 style={{ fontFamily: 'system-ui', fontSize: '1.1rem', fontWeight: 800, color: '#fff', margin: 0 }}>
-            {totalSavings > 0
-              ? `What could you do with your ${sym}${monthlySavings.toFixed(0)}/month savings?`
-              : suggestedPauseSubName
-                ? `What if you paused ${suggestedPauseSubName}?`
-                : `What could you do with ${sym}${monthlySavings.toFixed(0)}/month?`}
+    <div className="rounded-2xl shadow-lg overflow-hidden" style={{ background: 'linear-gradient(175deg, #16a34a 0%, #15803d 100%)' }}>
+
+      {/* RECAP HEADER */}
+      <div style={{ padding: '1.5rem 1.5rem 1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+          <span style={{ fontSize: '1.2rem' }}>💡</span>
+          <h3 style={{ fontFamily: 'system-ui', fontSize: '1rem', fontWeight: 700, color: '#fff', margin: 0, opacity: 0.9 }}>
+            Your full monthly picture
           </h3>
         </div>
-        <p style={{ fontFamily: 'system-ui', fontSize: '0.82rem', color: '#dcfce7', margin: 0, lineHeight: 1.5 }}>
-          {totalSavings > 0
-            ? (isUnlocked ? "Here\'s what your savings can become." : 'Choose a goal to see your personal savings plan.')
-            : suggestedPauseSubName
-              ? `That\'s ${sym}${monthlySavings.toFixed(0)}/month back in your pocket — here\'s what you could do with it.`
-              : 'Choose a goal to unlock your personal savings plan.'}
-        </p>
-      </div>
 
-      {/* Goals */}
-      <div className="px-6 pb-6 space-y-3">
-        {suggestedGoals.map((goal) => {
-          const isSelected = selectedGoalIds.includes(goal.id)
-          const isLongTerm = goal.type === 'longterm'
-
-          return (
-            <button
-              key={goal.id}
-              onClick={() => handleGoalClick(goal)}
-              className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
-                isSelected
-                  ? 'border-purple-500 bg-purple-50 shadow-md'
-                  : isLongTerm
-                  ? 'border-purple-200 bg-purple-50 hover:border-purple-400'
-                  : 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-sm'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl mt-0.5">{goal.emoji}</span>
-                  <div>
-                    <div className="font-semibold text-gray-900 flex items-center gap-2">
-                      {goal.title}
-                      {isLongTerm && (
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
-                          Long term
-                        </span>
-                      )}
-                    </div>
-                    <div className={`text-sm mt-0.5 ${!isUnlocked && isLongTerm ? "text-gray-300 blur-sm select-none" : "text-gray-500"}`}>{goal.description}</div>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  {isUnlocked ? (
-                    <>
-                      <div className="text-lg font-bold text-gray-800">
-                        {sym}{goal.targetAmount.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {goal.monthsToGoal === 120
-                          ? 'in 10 years'
-                          : `in ${goal.monthsToGoal} month${goal.monthsToGoal !== 1 ? 's' : ''}`}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-lg font-bold text-gray-300 blur-sm select-none">
-                      {sym}???
-                    </div>
-                  )}
-                </div>
+        <div style={{ background: 'rgba(0,0,0,0.15)', borderRadius: 12, padding: '0.75rem 1rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: 'system-ui', fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)' }}>🏠 Fixed costs</span>
+              <span style={{ fontFamily: 'system-ui', fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{sym}{fixedMonthly.toFixed(0)}/mo</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: 'system-ui', fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)' }}>📱 Subscriptions</span>
+              <span style={{ fontFamily: 'system-ui', fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{sym}{subsMonthly.toFixed(0)}/mo</span>
+            </div>
+            {variableMonthly > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: 'system-ui', fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)' }}>🛒 Variable (estimated)</span>
+                <span style={{ fontFamily: 'system-ui', fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{sym}{variableMonthly.toFixed(0)}/mo</span>
               </div>
+            )}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', marginTop: '0.3rem', paddingTop: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: 'system-ui', fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Estimated total</span>
+              <span style={{ fontFamily: 'system-ui', fontSize: '0.95rem', fontWeight: 800, color: '#fff' }}>{sym}{totalTracked.toFixed(0)}/mo</span>
+            </div>
+          </div>
+        </div>
 
-              {/* Progress bar for selected goals */}
-              {isSelected && isUnlocked && goal.monthsToGoal && goal.monthsToGoal < 120 && (
-                <div className="mt-3">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full"
-                      style={{ width: `${Math.min((1 / goal.monthsToGoal) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">Month 1 of {goal.monthsToGoal}</div>
-                </div>
-              )}
+        {totalSavings > 0 && (
+          <div style={{
+            background: '#fff', borderRadius: 12, padding: '0.9rem 1rem', marginBottom: '1.25rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+          }}>
+            <div>
+              <p style={{ fontFamily: 'system-ui', fontSize: '0.72rem', color: '#16a34a', fontWeight: 700, margin: '0 0 0.15rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Already reclaimed 🎉
+              </p>
+              <p style={{ fontFamily: 'system-ui', fontSize: '1.4rem', fontWeight: 800, color: '#14532d', margin: 0, lineHeight: 1 }}>
+                {sym}{monthlySavings.toFixed(0)}<span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#16a34a' }}>/month</span>
+              </p>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <p style={{ fontFamily: 'system-ui', fontSize: '0.72rem', color: '#9ca3af', margin: '0 0 0.1rem' }}>that's</p>
+              <p style={{ fontFamily: 'system-ui', fontSize: '1.15rem', fontWeight: 700, color: '#15803d', margin: 0 }}>
+                {sym}{(monthlySavings * 12).toFixed(0)}/year
+              </p>
+            </div>
+          </div>
+        )}
 
-              {/* Long term compounding note */}
-              {isLongTerm && !isUnlocked && (
-                <div className="mt-2 text-xs text-purple-600 font-medium">
-                  💡 Small monthly savings compound into life-changing amounts
+        {totalSavings > 0 && goalChoice === null && (
+          <div style={{ marginBottom: '0.5rem' }}>
+            <p style={{ fontFamily: 'system-ui', fontSize: '0.9rem', fontWeight: 700, color: '#fff', margin: '0 0 0.75rem' }}>
+              What do you want to do next?
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <button
+                onClick={() => setGoalChoice('goals')}
+                style={{
+                  background: '#fff', borderRadius: 12, padding: '0.85rem 1rem',
+                  border: 'none', cursor: 'pointer', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }}
+              >
+                <span style={{ fontSize: '1.3rem' }}>🎯</span>
+                <div>
+                  <p style={{ fontFamily: 'system-ui', fontSize: '0.85rem', fontWeight: 700, color: '#14532d', margin: 0 }}>
+                    See what {sym}{monthlySavings.toFixed(0)}/mo can become
+                  </p>
+                  <p style={{ fontFamily: 'system-ui', fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
+                    Goals, timelines, compound interest
+                  </p>
                 </div>
-              )}
+                <span style={{ marginLeft: 'auto', color: '#16a34a', fontWeight: 700, fontSize: '1.1rem' }}>›</span>
+              </button>
+              <button
+                onClick={() => { setGoalChoice('more'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                style={{
+                  background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: '0.85rem 1rem',
+                  border: '1.5px solid rgba(255,255,255,0.3)', cursor: 'pointer', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', gap: '0.75rem',
+                }}
+              >
+                <span style={{ fontSize: '1.3rem' }}>💡</span>
+                <div>
+                  <p style={{ fontFamily: 'system-ui', fontSize: '0.85rem', fontWeight: 700, color: '#fff', margin: 0 }}>
+                    Find more savings first
+                  </p>
+                  <p style={{ fontFamily: 'system-ui', fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', margin: 0 }}>
+                    Check what else you could pause or cancel
+                  </p>
+                </div>
+                <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.6)', fontWeight: 700, fontSize: '1.1rem' }}>›</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* After "Find more savings first" — keep the goals CTA visible */}
+        {totalSavings > 0 && goalChoice === 'more' && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <button
+              onClick={() => setGoalChoice('goals')}
+              style={{
+                width: '100%', background: '#fff', borderRadius: 12, padding: '0.85rem 1rem',
+                border: 'none', cursor: 'pointer', textAlign: 'left',
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              }}
+            >
+              <span style={{ fontSize: '1.3rem' }}>🎯</span>
+              <div>
+                <p style={{ fontFamily: 'system-ui', fontSize: '0.85rem', fontWeight: 700, color: '#14532d', margin: 0 }}>
+                  See what {sym}{monthlySavings.toFixed(0)}/mo can become
+                </p>
+                <p style={{ fontFamily: 'system-ui', fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
+                  Goals, timelines, compound interest
+                </p>
+              </div>
+              <span style={{ marginLeft: 'auto', color: '#16a34a', fontWeight: 700, fontSize: '1.1rem' }}>›</span>
             </button>
-          )
-        })}
+          </div>
+        )}
+
+        {showGoals && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+              <h3 style={{ fontFamily: 'system-ui', fontSize: '1rem', fontWeight: 700, color: '#fff', margin: 0 }}>
+                {totalSavings > 0
+                  ? `What could you do with that ${sym}${monthlySavings.toFixed(0)}/month?`
+                  : suggestedPauseSubName
+                    ? `What if you paused ${suggestedPauseSubName}?`
+                    : `What could you do with ${sym}${monthlySavings.toFixed(0)}/month?`}
+              </h3>
+            </div>
+            <p style={{ fontFamily: 'system-ui', fontSize: '0.82rem', color: '#bbf7d0', margin: '0 0 0.6rem', lineHeight: 1.5 }}>
+              {isUnlocked ? "Here's what those savings could actually become." : "Here's what those savings could become."}
+            </p>
+            {!isUnlocked && (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                background: 'rgba(255,255,255,0.18)', borderRadius: 20,
+                padding: '0.35rem 0.85rem', marginBottom: '1rem',
+                border: '1px solid rgba(255,255,255,0.35)',
+              }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', fontFamily: 'system-ui' }}>
+                  👆 Tap a goal below to unlock your plan
+                </span>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Email gate */}
+      {/* GOAL CARDS */}
+      {showGoals && (
+        <div className="px-4 pb-5 space-y-2.5">
+          {suggestedGoals.map((goal) => {
+            const isSelected = selectedGoalIds.includes(goal.id)
+            const isLongTerm = goal.type === 'longterm'
+
+            if (isLongTerm) {
+              return (
+                <OpportunityCostCard
+                  key={goal.id}
+                  monthlyAmount={monthlySavings}
+                  currency={currency}
+                  isUnlocked={isUnlocked}
+                  onLockClick={() => setShowGate(true)}
+                />
+              )
+            }
+
+            return (
+              <button
+                key={goal.id}
+                onClick={() => handleGoalClick(goal)}
+                className="w-full text-left rounded-xl p-4 transition-all"
+                style={{
+                  background: isSelected ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.88)',
+                  border: isSelected ? '2px solid #fff' : '2px solid rgba(255,255,255,0.4)',
+                  boxShadow: isSelected ? '0 2px 12px rgba(0,0,0,0.15)' : 'none',
+                }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{goal.emoji}</span>
+                    <div>
+                      <div className="font-semibold text-gray-900">{goal.title}</div>
+                      <div className="text-sm mt-0.5 text-gray-500">{goal.description}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isUnlocked ? (
+                      <div className="text-right">
+                        <div className="text-base font-bold text-gray-800">
+                          {sym}{goal.targetAmount.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {goal.monthsToGoal === 120
+                            ? 'in 10 years'
+                            : `in ${goal.monthsToGoal} month${goal.monthsToGoal !== 1 ? 's' : ''}`}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span style={{ fontSize: '1.1rem' }}>🔒</span>
+                        <span style={{ fontSize: '0.65rem', color: '#9ca3af', fontFamily: 'system-ui' }}>unlock</span>
+                      </div>
+                    )}
+                    <span style={{
+                      fontSize: '1rem',
+                      color: isSelected ? '#16a34a' : '#9ca3af',
+                      transition: 'transform 0.2s, color 0.2s',
+                      display: 'inline-block',
+                      transform: isSelected ? 'rotate(90deg)' : 'rotate(0deg)',
+                      fontWeight: 700,
+                    }}>›</span>
+                  </div>
+                </div>
+
+                {isSelected && isUnlocked && goal.monthsToGoal && goal.monthsToGoal < 120 && (
+                  <div className="mt-3">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full"
+                        style={{ width: `${Math.min((1 / goal.monthsToGoal) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">Month 1 of {goal.monthsToGoal}</div>
+                  </div>
+                )}
+
+                {isLongTerm && !isUnlocked && (
+                  <div className="mt-2 text-xs text-purple-600 font-medium">
+                    💡 Small monthly savings compound into life-changing amounts
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* EMAIL GATE */}
       {showGate && !isUnlocked && (
         <div className="border-t border-gray-100 bg-gradient-to-br from-purple-50 to-white px-6 py-6">
           <div className="text-center mb-4">
@@ -206,10 +362,21 @@ export default function SmartGoals({
         </div>
       )}
 
-      {/* Unlocked state — all goals selected prompt */}
-      {isUnlocked && selectedGoalIds.length === 0 && (
-        <div className="border-t border-gray-100 px-6 py-4 text-center text-sm text-gray-400">
-          Tap a goal to track your progress toward it
+      {/* BOTTOM HINT */}
+      {isUnlocked && showGoals && (
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.2)',
+          padding: '0.85rem 1.5rem',
+          textAlign: 'center',
+          fontSize: '0.8rem',
+          color: selectedGoalIds.length === 0 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)',
+          transition: 'color 0.4s ease',
+          fontWeight: selectedGoalIds.length === 0 ? 600 : 400,
+          background: 'transparent',
+        }}>
+          {selectedGoalIds.length === 0
+            ? '👆 Tap a goal above to track your progress toward it'
+            : 'Tap another goal to track it too'}
         </div>
       )}
     </div>

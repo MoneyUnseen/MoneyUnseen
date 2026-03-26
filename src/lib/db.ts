@@ -19,7 +19,7 @@ interface MoneyUnseenDB extends DBSchema {
 }
 
 const DB_NAME = 'moneyunseen-db'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 let dbInstance: IDBPDatabase<MoneyUnseenDB> | null = null
 
