@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="ring">
+      <path fill-rule="evenodd" d="
+        M50,2 a48,48 0 1,1 0,96 a48,48 0 1,1 0,-96
+        M50,22 a28,28 0 1,0 0,56 a28,28 0 1,0 0,-56
+      "/>
+    </clipPath>
+  </defs>
+  <rect x="2" y="49" width="96" height="49" fill="#3d2778" clip-path="url(#ring)"/>
+  <rect x="2" y="2" width="96" height="44" fill="#6c54b5" clip-path="url(#ring)"/>
+</svg>
