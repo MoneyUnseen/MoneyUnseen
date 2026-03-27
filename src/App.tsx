@@ -12,7 +12,6 @@ import SaveMoreModal from './components/SaveMoreModal'
 import FixedCostNudge from './components/FixedCostNudge'
 import VariableSpendCard from './components/VariableSpendCard'
 import ReturnVisitCard from './components/ReturnVisitCard'
-import ExportButton from './components/ExportButton'
 import YearlyCheckTip from './components/YearlyCheckTip'
 
 function App() {
@@ -267,13 +266,6 @@ function App() {
           currency={currency}
           highlightNoDates={highlightNoDates}
         />
-
-        {/* Export — below the list, only when there are items */}
-        {subscriptions.length > 0 && !showAddForm && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <ExportButton subscriptions={subscriptions} currency={currency} />
-          </div>
-        )}
 
         {/* Email nudge after 4th item */}
         {showEmailNudge && !profile?.email && (

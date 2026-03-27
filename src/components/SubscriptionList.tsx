@@ -299,8 +299,9 @@ export default function SubscriptionList({
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.25rem' }}>
-          <ExportButton subscriptions={subscriptions} currency={currency} />
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', paddingTop: '0.25rem' }}>
+          <ExportButton subscriptions={subscriptions} currency={currency} mode="backup" />
+          <ExportButton subscriptions={subscriptions} currency={currency} mode="export" />
         </div>
       </div>
     </>

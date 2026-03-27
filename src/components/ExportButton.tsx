@@ -6,7 +6,8 @@ interface ExportButtonProps {
   subscriptions: Subscription[]
   currency?: Currency
   onImport?: (subs: Subscription[]) => void
-  headerMode?: boolean  // true = compact import-only button for header
+  headerMode?: boolean
+  mode?: 'backup' | 'export'
 }
 
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -16,7 +17,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   utilities: '💡', other: '📦',
 }
 
-export default function ExportButton({ subscriptions, currency = 'EUR', onImport, headerMode = false }: ExportButtonProps) {
+export default function ExportButton({ subscriptions, currency = 'EUR', onImport, headerMode = false, mode }: ExportButtonProps) {
   const [open, setOpen] = useState(false)
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -168,6 +169,58 @@ ${stopped.length > 0 ? `<div class="dimmed"><h2>Stopped</h2><table><thead><tr><t
     border: 'none', background: 'transparent', cursor: 'pointer',
     fontFamily: 'system-ui', fontSize: '0.85rem', fontWeight: 600,
     color: '#374151', textAlign: 'left',
+  }
+
+  // ── Backup mode: one-click JSON download ─────────────────────
+  if (mode === 'backup') {
+    return (
+      <button
+        onClick={exportJSON}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '0.4rem',
+          padding: '0.5rem 1.1rem', borderRadius: 10,
+          border: '1.5px solid #e5e7eb', background: '#fff',
+          color: '#6b7280', fontSize: '0.82rem', fontWeight: 600,
+          fontFamily: 'system-ui', cursor: 'pointer',
+        }}
+      >
+        💾 Backup
+      </button>
+    )
+  }
+
+  // ── Export mode: dropdown with PDF / CSV ──────────────────────
+  if (mode === 'export') {
+    return (
+      <div style={{ position: 'relative', display: 'inline-block' }}>
+        <button
+          onClick={() => setOpen(!open)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            padding: '0.5rem 1.1rem', borderRadius: 10,
+            border: '1.5px solid #e5e7eb', background: '#fff',
+            color: '#6b7280', fontSize: '0.82rem', fontWeight: 600,
+            fontFamily: 'system-ui', cursor: 'pointer',
+          }}
+        >
+          📤 Export
+        </button>
+        {open && (
+          <>
+            <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
+            <div style={{
+              position: 'absolute', bottom: '110%', left: 0,
+              background: '#fff', borderRadius: 12, padding: '0.5rem',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)', border: '1px solid #e5e7eb',
+              zIndex: 20, minWidth: 200,
+            }}>
+              <button onClick={exportPDF} style={btnStyle}>📄 Download as PDF</button>
+              <button onClick={exportCSV} style={btnStyle}>📊 Download as CSV</button>
+            </div>
+          </>
+        )}
+      </div>
+    )
   }
 
   // In headerMode: compact import-only button for the header
