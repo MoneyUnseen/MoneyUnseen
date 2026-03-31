@@ -93,6 +93,13 @@ export function useProfile() {
     const updated = { ...profile, email, emailVerified: true }
     await db.saveProfile(updated)
     setProfile(updated)
+    try {
+      await fetch("https://moneyunseen.com/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, plan: "free" }),
+      })
+    } catch (_) {}
   }
 
   const setCurrency = async (currency: Currency) => {
