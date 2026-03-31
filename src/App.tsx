@@ -267,19 +267,26 @@ function App() {
           highlightNoDates={highlightNoDates}
         />
 
-        {/* Email nudge after 4th item */}
+        {/* Email nudge after 4th item — modal overlay */}
         {showEmailNudge && !profile?.email && (
           <div style={{
-            borderRadius: 14, background: 'linear-gradient(135deg, #f5f3ff, #faf5ff)',
-            border: '1.5px solid #ddd6fe', padding: '1rem 1.1rem',
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem',
+          }} onClick={() => handleEmailNudgeDismiss()}>
+          <div style={{
+            borderRadius: 18, background: 'linear-gradient(135deg, #f5f3ff, #faf5ff)',
+            border: '1.5px solid #ddd6fe', padding: '1.5rem 1.4rem',
             display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
-          }}>
-            <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>🔔</span>
+            maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(109,40,217,0.18)',
+          }} onClick={e => e.stopPropagation()}>
+            <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>🔔</span>
             <div style={{ flex: 1 }}>
-              <p style={{ fontFamily: 'system-ui', fontSize: '0.85rem', fontWeight: 700, color: '#5b21b6', margin: '0 0 0.2rem' }}>
+              <p style={{ fontFamily: 'system-ui', fontSize: '0.95rem', fontWeight: 700, color: '#5b21b6', margin: '0 0 0.35rem' }}>
                 Want to know when we find new ways to save?
               </p>
-              <p style={{ fontFamily: 'system-ui', fontSize: '0.78rem', color: '#7c3aed', margin: '0 0 0.6rem', lineHeight: 1.5 }}>
+              <p style={{ fontFamily: 'system-ui', fontSize: '0.82rem', color: '#7c3aed', margin: '0 0 0.85rem', lineHeight: 1.5 }}>
                 We'll let you know when new savings opportunities become available — no spam, ever.
               </p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -318,6 +325,7 @@ function App() {
               onClick={() => handleEmailNudgeDismiss()}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a78bfa', fontSize: '1rem', flexShrink: 0, padding: 0 }}
             >✕</button>
+          </div>
           </div>
         )}
 
