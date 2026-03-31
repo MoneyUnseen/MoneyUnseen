@@ -192,6 +192,11 @@ const AUTO_DETECT_RULES: [string[], DetectResult][] = [
   [['seguro hogar', 'seguro casa'], { tab: 'fixed', category: 'home_insurance' }], // ES
   [['hemförsäkring'], { tab: 'fixed', category: 'home_insurance' }], // SE
   [['innboforsikring', 'hjemforsikring'], { tab: 'fixed', category: 'home_insurance' }], // NO
+  [['life insurance', 'levensverzekering', 'overlijdensrisicoverzekering', 'orv'], { tab: 'fixed', category: 'disability_insurance' }],
+  [['lebensversicherung'], { tab: 'fixed', category: 'disability_insurance' }],
+  [['assurance vie'], { tab: 'fixed', category: 'disability_insurance' }],
+  [['seguro de vida'], { tab: 'fixed', category: 'disability_insurance' }],
+  [['livsforsikring', 'livfoersikring'], { tab: 'fixed', category: 'disability_insurance' }],
   // ── ENERGY ─────────────────────────────────────────────────────
   [['energie', 'energierekening', 'energieleverancier'], { tab: 'fixed', category: 'energy' }],
   [['energy', 'electricity', 'gas bill', 'utilities bill'], { tab: 'fixed', category: 'energy' }],
