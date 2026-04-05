@@ -11,6 +11,8 @@ interface SubscriptionListProps {
   onStop: (id: string) => void
   onReactivate: (id: string) => void
   onUpdate: (sub: Subscription) => void
+  onToggleReminder?: (sub: Subscription, enabled: boolean) => void | Promise<void>
+  canEnableReminders?: boolean
   currency?: Currency
   highlightNoDates?: boolean
 }
@@ -75,7 +77,7 @@ function formatDate(date: Date): string {
 }
 
 export default function SubscriptionList({
-  subscriptions, onDelete, onCancel, onStop, onReactivate, onUpdate, currency = 'EUR', highlightNoDates = false
+  subscriptions, onDelete, onCancel, onStop, onReactivate, onUpdate, onToggleReminder, canEnableReminders = false, currency = 'EUR', highlightNoDates = false
 }: SubscriptionListProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [editingSub, setEditingSub] = useState<Subscription | null>(null)
@@ -190,7 +192,9 @@ export default function SubscriptionList({
                 <SubscriptionCard key={sub.id} subscription={sub}
                   onDelete={handleDelete} onCancel={handleCancel} onStop={handleStop}
                   onReactivate={handleReactivate} onEdit={() => setEditingSub(sub)}
-                  currency={currency} isFixedCost />
+                  currency={currency} isFixedCost
+                  onToggleReminder={onToggleReminder}
+                  canEnableReminders={canEnableReminders} />
               ))}
             </div>
           </div>
@@ -214,6 +218,8 @@ export default function SubscriptionList({
                   onDelete={handleDelete} onCancel={handleCancel} onStop={handleStop}
                   onReactivate={handleReactivate} onEdit={() => setEditingSub(sub)}
                   currency={currency}
+                  onToggleReminder={onToggleReminder}
+                  canEnableReminders={canEnableReminders}
                   highlightNoDate={highlightNoDates && !sub.renewalDate} />
               ))}
             </div>
@@ -239,7 +245,9 @@ export default function SubscriptionList({
                 <SubscriptionCard key={sub.id} subscription={sub}
                   onDelete={handleDelete} onCancel={handleCancel} onStop={handleStop}
                   onReactivate={handleReactivate} onEdit={() => setEditingSub(sub)}
-                  currency={currency} isPaused />
+                  currency={currency} isPaused
+                  onToggleReminder={onToggleReminder}
+                  canEnableReminders={canEnableReminders} />
               ))}
             </div>
           </div>
@@ -291,7 +299,9 @@ export default function SubscriptionList({
                     <SubscriptionCard key={sub.id} subscription={sub}
                       onDelete={handleDelete} onCancel={handleCancel} onStop={handleStop}
                       onReactivate={handleReactivate} onEdit={() => setEditingSub(sub)}
-                      currency={currency} isStopped />
+                      currency={currency} isStopped
+                      onToggleReminder={onToggleReminder}
+                      canEnableReminders={canEnableReminders} />
                   ))}
                 </div>
               </div>
@@ -310,6 +320,8 @@ export default function SubscriptionList({
 
 function SubscriptionCard({
   subscription, onDelete, onCancel, onStop, onReactivate, onEdit,
+  onToggleReminder,
+  canEnableReminders = false,
   isPaused = false, isStopped = false, currency = 'EUR', isFixedCost = false, highlightNoDate = false,
 }: {
   subscription: Subscription
@@ -318,6 +330,8 @@ function SubscriptionCard({
   onStop: (id: string) => void
   onReactivate: (id: string) => void
   onEdit: () => void
+  onToggleReminder?: (sub: Subscription, enabled: boolean) => void | Promise<void>
+  canEnableReminders?: boolean
   isPaused?: boolean
   isStopped?: boolean
   isFixedCost?: boolean
@@ -366,6 +380,8 @@ function SubscriptionCard({
     : 'bg-white hover:shadow-md border border-gray-50'
 
   const noDateHighlight = highlightNoDate && !subscription.renewalDate && !isPaused && !isStopped && !isFixedCost
+  const canShowReminderToggle = !isFixedCost && !isStopped && !!subscription.renewalDate
+  const reminderEnabled = !!subscription.reminderEnabled
 
   return (
     <div
@@ -502,6 +518,35 @@ function SubscriptionCard({
           )}
         </div>
       </div>
+
+      {canShowReminderToggle && (
+        <div style={{ marginTop: '0.55rem', marginLeft: '3.25rem' }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (!onToggleReminder) return
+              if (!canEnableReminders && !reminderEnabled) {
+                alert('Premium feature: renewal reminders are available on Premium. Add your email and unlock Premium to enable.')
+                return
+              }
+              onToggleReminder(subscription, !reminderEnabled)
+            }}
+            style={{
+              borderRadius: 999,
+              border: `1px solid ${reminderEnabled ? '#bfdbfe' : '#e5e7eb'}`,
+              background: reminderEnabled ? '#eff6ff' : '#f9fafb',
+              color: reminderEnabled ? '#1d4ed8' : '#6b7280',
+              padding: '0.2rem 0.55rem',
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              fontFamily: 'system-ui',
+              cursor: 'pointer',
+            }}
+          >
+            {reminderEnabled ? '🔔 Reminder on (7 days before renewal)' : '🔔 Remind me before renewal'}
+          </button>
+        </div>
+      )}
 
       {/* Cancel deadline indicator */}
       {indicatorLevel && cancelDeadline && (

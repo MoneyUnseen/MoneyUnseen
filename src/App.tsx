@@ -13,6 +13,7 @@ import FixedCostNudge from './components/FixedCostNudge'
 import VariableSpendCard from './components/VariableSpendCard'
 import ReturnVisitCard from './components/ReturnVisitCard'
 import YearlyCheckTip from './components/YearlyCheckTip'
+import { createReminder, deleteReminder } from './lib/remindersApi'
 
 function App() {
   const { subscriptions, addSubscription, updateSubscription, deleteSubscription, cancelSubscription, reactivateSubscription, stopSubscription, loading: subsLoading } = useSubscriptions()
@@ -51,6 +52,8 @@ function App() {
   const [yearlyTip, setYearlyTip] = useState<{ name: string; cost: number } | null>(null)
 
   const currency = profile?.currency ?? 'EUR'
+  const premiumEnabled = !!localStorage.getItem('moneyunseen-premium-enabled')
+  const canEnableReminders = premiumEnabled && !!profile?.email
 
   const totalMonthlySpend = subscriptions
     .filter(s => s.isActive && !s.isStopped)
@@ -145,6 +148,9 @@ function App() {
 
   const handleCancelClick = async (id: string) => {
     const sub = subscriptions.find(s => s.id === id)
+    if (sub?.reminderEnabled) {
+      try { await deleteReminder(sub.id) } catch (_) {}
+    }
     await cancelSubscription(id)
     setShowConfetti(true)
     if (sub && !localStorage.getItem('moneyunseen-savemore-shown')) {
@@ -156,11 +162,52 @@ function App() {
 
   const handleStopClick = async (id: string) => {
     const sub = subscriptions.find(s => s.id === id)
+    if (sub?.reminderEnabled) {
+      try { await deleteReminder(sub.id) } catch (_) {}
+    }
     await stopSubscription(id)
     if (sub && !localStorage.getItem('moneyunseen-savemore-shown')) {
       const saved = getMonthlyEquivalent(sub.cost, sub.frequency)
       setSaveMoreModal({ amount: saved })
       localStorage.setItem('moneyunseen-savemore-shown', '1')
+    }
+  }
+
+  const handleDeleteClick = async (id: string) => {
+    const sub = subscriptions.find(s => s.id === id)
+    if (sub?.reminderEnabled) {
+      try { await deleteReminder(sub.id) } catch (_) {}
+    }
+    await deleteSubscription(id)
+  }
+
+  const handleToggleReminder = async (sub: typeof subscriptions[number], enabled: boolean) => {
+    if (!sub.renewalDate) return
+    if (enabled && !premiumEnabled) {
+      alert('Premium feature: renewal reminders are available on Premium.')
+      return
+    }
+    if (enabled && !profile?.email) {
+      alert('Add your email first so we can send reminders.')
+      return
+    }
+
+    try {
+      if (enabled) {
+        await createReminder({
+          email: profile!.email!,
+          itemId: sub.id,
+          serviceName: sub.name,
+          renewalDate: new Date(sub.renewalDate).toISOString(),
+          frequency: sub.frequency,
+        })
+      } else {
+        await deleteReminder(sub.id)
+      }
+      await updateSubscription({ ...sub, reminderEnabled: enabled })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      alert(`Reminder update failed: ${msg}`)
     }
   }
 
@@ -258,11 +305,13 @@ function App() {
 
         <SubscriptionList
           subscriptions={subscriptions}
-          onDelete={deleteSubscription}
+          onDelete={handleDeleteClick}
           onCancel={handleCancelClick}
           onReactivate={reactivateSubscription}
           onStop={handleStopClick}
           onUpdate={updateSubscription}
+          onToggleReminder={handleToggleReminder}
+          canEnableReminders={canEnableReminders}
           currency={currency}
           highlightNoDates={highlightNoDates}
         />

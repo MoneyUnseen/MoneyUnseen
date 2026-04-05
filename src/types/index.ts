@@ -31,6 +31,7 @@ export interface Subscription {
   addedDate: Date
   isActive: boolean
   isStopped?: boolean
+  reminderEnabled?: boolean
   notes?: string
   isTrial?: boolean
   trialEndsDate?: Date

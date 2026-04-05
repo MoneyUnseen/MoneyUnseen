@@ -9,6 +9,7 @@ interface AddSubscriptionFormProps {
     frequency: BillingFrequency
     category: SubscriptionCategory_All
     renewalDate: Date
+    reminderEnabled?: boolean
     isTrial?: boolean
     trialEndsDate?: Date
     noticePeriod?: number
@@ -403,6 +404,7 @@ export default function AddSubscriptionForm({ onAdd, onCancel }: AddSubscription
       frequency,
       category,
       renewalDate: new Date(renewalDate),
+      reminderEnabled: false,
       isTrial: isTrial || undefined,
       trialEndsDate: isTrial && trialEndsDate ? new Date(trialEndsDate) : undefined,
       noticePeriod: isFixed ? 0 : (showRenewalFields && showMoreOptions ? noticePeriod : 0),
