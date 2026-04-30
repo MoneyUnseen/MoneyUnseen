@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { BillingFrequency, SubscriptionCategory_All } from '../types'
-import { isFixedCostCategory } from '../types'
+import { getMonthlyEquivalent, isFixedCostCategory } from '../types'
 
 interface AddSubscriptionFormProps {
   onAdd: (subscription: {
@@ -394,6 +394,7 @@ export default function AddSubscriptionForm({ onAdd, onCancel }: AddSubscription
   const effectiveCost = isLottery
     ? (parseFloat(cost) || 0) * lotteryTickets
     : parseFloat(cost) || 0
+  const monthlyEquivalent = getMonthlyEquivalent(effectiveCost, frequency)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -487,6 +488,11 @@ export default function AddSubscriptionForm({ onAdd, onCancel }: AddSubscription
               <option value="quarterly">Quarterly</option>
               <option value="yearly">Yearly</option>
             </select>
+            {cost && frequency !== 'monthly' && (
+              <p className="text-xs text-gray-500 mt-1">
+                This will be saved as {effectiveCost.toFixed(2)} per {frequency} and count as about {monthlyEquivalent.toFixed(2)}/mo in your totals.
+              </p>
+            )}
           </div>
         </div>
 

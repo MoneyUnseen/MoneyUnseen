@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Subscription, BillingFrequency, SubscriptionCategory_All } from '../types'
+import { getMonthlyEquivalent } from '../types'
 
 interface EditSubscriptionFormProps {
   subscription: Subscription
@@ -24,6 +25,7 @@ export default function EditSubscriptionForm({ subscription, onSave, onClose }: 
       ? new Date(subscription.trialEndsDate).toISOString().split('T')[0]
       : ''
   )
+  const monthlyEquivalent = getMonthlyEquivalent(parseFloat(cost) || 0, frequency)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,6 +91,11 @@ export default function EditSubscriptionForm({ subscription, onSave, onClose }: 
                 <option value="quarterly">Quarterly</option>
                 <option value="yearly">Yearly</option>
               </select>
+              {cost && frequency !== 'monthly' && (
+                <p style={{ fontFamily: 'system-ui', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.3rem' }}>
+                  This is stored as {Number(cost).toFixed(2)} per {frequency} and counts as about {monthlyEquivalent.toFixed(2)}/mo in totals.
+                </p>
+              )}
             </div>
           </div>
 
