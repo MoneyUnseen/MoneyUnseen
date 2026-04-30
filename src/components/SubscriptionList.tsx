@@ -90,6 +90,19 @@ function getBillingLabel(frequency: Subscription['frequency']) {
   }
 }
 
+function getBillingUnitLabel(frequency: Subscription['frequency']) {
+  switch (frequency) {
+    case 'weekly':
+      return 'week'
+    case 'quarterly':
+      return 'quarter'
+    case 'yearly':
+      return 'year'
+    default:
+      return 'month'
+  }
+}
+
 export default function SubscriptionList({
   subscriptions, onDelete, onCancel, onStop, onReactivate, onUpdate, onToggleReminder, canEnableReminders = false, currency = 'EUR', highlightNoDates = false
 }: SubscriptionListProps) {
@@ -355,6 +368,7 @@ function SubscriptionCard({
   const monthly = getMonthlyEquivalent(subscription.cost, subscription.frequency)
   const sym = getCurrencySymbol(currency)
   const billingLabel = getBillingLabel(subscription.frequency)
+  const billingUnitLabel = getBillingUnitLabel(subscription.frequency)
 
   // No cancel deadline for government levies / fixed obligations
   const NO_CANCEL_NOTICE_CATS = new Set(['road_tax', 'municipal_tax', 'mortgage', 'rent', 'pension', 'utilities', 'childcare'])
@@ -433,7 +447,7 @@ function SubscriptionCard({
               )}
             </div>
             <div className="text-sm text-gray-400 flex items-center gap-2 flex-wrap">
-              <span>{billingLabel}: {sym}{subscription.cost.toFixed(2)}/{subscription.frequency}</span>
+              <span>{billingLabel}: {sym}{subscription.cost.toFixed(2)}/{billingUnitLabel}</span>
               {subscription.frequency !== 'monthly' && (
                 <span className="text-gray-500">
                   Counts as {sym}{monthly.toFixed(2)}/mo in your totals
